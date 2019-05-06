@@ -13,7 +13,6 @@ def parse_nessus_XML(xmlfile):
 	logging.debug("Welcome to parse_nessus_XML!")
 	# create element tree object
 	tree = ""
-	
 	try:
 		tree = ET.parse(xmlfile)
 	except ParseError as e:
