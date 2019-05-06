@@ -1,34 +1,16 @@
-#!/usr/bin/env python
-
-import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import ParseError
-
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-print 'Debug On'
+#!/usr/bin/env python3
 
 import os
 import re
 import time
-
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import ParseError
 from argparse import ArgumentParser
-parser = ArgumentParser()
-parser.add_argument("-f", "--file", dest="filename",
-                    help="parse FILE", metavar="FILE")
-parser.add_argument("-d", "--dir", dest="directory",
-                    help="Parse all xml in directory", metavar="DIR")
-parser.add_argument("-q", "--quiet",
-                    action="store_false", dest="verbose", default=True,
-                    help="don't print status messages to stdout")
+import logging
 
-# Global ip list
-ipALL = set()
-
-# This is the nessus parser
-# it parses .... .nessus files
+# This is the nessus parser ... it parses .... .nessus files
 def parse_nessus_XML(xmlfile):
 	logging.debug("Welcome to parse_nessus_XML!")
-
 	# create element tree object
 	tree = ""
 	
@@ -39,7 +21,6 @@ def parse_nessus_XML(xmlfile):
 		return
 
 	root = tree.getroot()
-
 	for block in root:
 		if block.tag == "Report":
 			for report_host in block:
@@ -59,9 +40,7 @@ def parse_nessus_XML(xmlfile):
 						fullLine = currIP + " " + report_item.attrib['port'] + " "  + report_item.attrib['protocol'] + " " + report_item.attrib['svc_name'] + " up" 
 						ipALL.add(fullLine)
 
-# This is the nmap parser
-# it parses .... .xml files
-# I need to actually try to ensure its a nMap file
+# This is the nmap parser ... it parses .... .xml files
 def parse_nMap_XML(xmlfile):
 	logging.debug("Welcome to parse_nMap_XML!")
 
@@ -76,7 +55,6 @@ def parse_nMap_XML(xmlfile):
 
 	# get root element
 	root = tree.getroot()
-
 	for item in root.findall('./host'):
 		
 		# get the stat value
@@ -107,71 +85,59 @@ def parse_nMap_XML(xmlfile):
 								if port is not None:
 									fullLine = ipADDR + " " + port + " " + proto +" " + service +" " + state
 									ipALL.add(fullLine)
-
-def main():
-	args = parser.parse_args()
-	#print "working on:", args
-
-	if args.filename is not None:
-		f = args.filename
-		if f.endswith('.xml'):
-			logging.debug("FILE: %r", f)
-			parse_nMap_XML(f)
-		elif f.endswith('.nessus'):
-				logging.debug("PATH: %r", f)
-				parse_nessus_XML(f)
-		else :
-			logging.warn("skipping: %r", f)
-
-
-	elif args.directory is not None:
-		path = args.directory
-
-		for f in os.listdir(path):
-
-			# For now we assume xml is nMap
-			if f.endswith('.xml'): 
-				fullname = os.path.join(path, f)
-				#print fullname
-				logging.debug("PATH: %r", fullname)
-				parse_nMap_XML(fullname)
-			# .nessus has to be nessus right?
-			elif f.endswith('.nessus'):
-				fullname = os.path.join(path, f)
-				#print fullname
-				logging.debug("PATH: %r", fullname)
-				parse_nessus_XML(fullname)
-			else :
-				logging.warn("skipping: %r", f)
-	else :
-		print "usage issues =("
-		exit
-
 def outIT():
 	if len(ipALL) < 1:
-		print "No data =("
-		for x in vulnerabilities:
-			print (x)
+		print ("No data =(")
 		quit()
 
 	sorted_IP = sorted(ipALL)
 	fN = "ip_pivot_list_" + str(time.time()) + ".txt"
-	print "Output saved to :" + fN
+	print ("Output saved to :" + fN)
 
-	with open(fN, 'w') as f:
+	with open(fN, 'w') as fH:
 		for ip in sorted_IP:
-			print >>f, ip
+			fH.write(ip + "\n")
 
-# This is the main
-if __name__ == "__main__":
-	
-	# Logging ... this doesnt work at the moment
-	#if not __debug__:
-	#	print 'Debug On'
-	#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-    
-    # call main 
-	main()
+def main(f):
+	# Global ip list
+	ipALL = set()
 
+	# For now we assume xml is nMap
+	if f.endswith('.xml'): 
+		logging.debug("PATH: %r", f)
+		parse_nMap_XML(f)
+	# .nessus has to be nessus right?
+	elif f.endswith('.nessus'):
+		logging.debug("PATH: %r", f)
+		parse_nessus_XML(f)
+	else :
+		logging.warn("skipping: %r", f)
+		
 	# Output it all 
 	outIT()
+
+if __name__ == "__main__":
+	logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+	print('Debug On')
+ 
+	parser = ArgumentParser()
+	parser.add_argument("-f", "--file", dest="filename",help="parse FILE", metavar="FILE")
+	parser.add_argument("-d", "--dir", dest="directory",help="Parse all xml in directory", metavar="DIR")
+	parser.add_argument("-q", "--quiet",action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
+	args = parser.parse_args()
+
+	if args.filename is not None:
+		f = os.path.abspath(args.filename)
+		main(f)
+
+	elif args.directory is not None:
+		path = args.directory
+		for f in os.listdir(path):
+			fullname = os.path.join(path, f)
+			main(fullname)
+	else :
+		parser.print_help()
+		exit()
+
+    # call main 
+	main()
