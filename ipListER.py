@@ -139,4 +139,8 @@ if __name__ == "__main__":
 		exit()
 
     # call main 
+<<<<<<< HEAD
 	main()
+=======
+	main()
+>>>>>>> origin/master
