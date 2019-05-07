@@ -10,6 +10,7 @@ import logging
 
 # This is the nessus parser ... it parses .... .nessus files
 def parse_nessus_XML(xmlfile):
+
 	logging.debug("Welcome to parse_nessus_XML!")
 	# create element tree object
 	tree = ""
@@ -41,6 +42,7 @@ def parse_nessus_XML(xmlfile):
 
 # This is the nmap parser ... it parses .... .xml files
 def parse_nMap_XML(xmlfile):
+
 	logging.debug("Welcome to parse_nMap_XML!")
 
 	# create element tree object
@@ -97,10 +99,25 @@ def outIT():
 		for ip in sorted_IP:
 			fH.write(ip + "\n")
 
-def main(f):
-	# Global ip list
-	ipALL = set()
+def dirLoop(path):
+	for f in os.listdir(path):
+		fullname = os.path.join(path, f)
+			# For now we assume xml is nMap
+		if f.endswith('.xml'): 
+			logging.debug("PATH: %r", f)
+			parse_nMap_XML(fullname)
 
+		# .nessus has to be nessus right?
+		elif f.endswith('.nessus'):
+			logging.debug("PATH: %r", f)
+			parse_nessus_XML(fullname)
+		else :
+			logging.warn("skipping: %r", f)
+
+	# Output it all 
+	outIT()
+
+def main(f):
 	# For now we assume xml is nMap
 	if f.endswith('.xml'): 
 		logging.debug("PATH: %r", f)
@@ -125,19 +142,17 @@ if __name__ == "__main__":
 	parser.add_argument("-q", "--quiet",action="store_false", dest="verbose", default=True, help="don't print status messages to stdout")
 	args = parser.parse_args()
 
+	# Global ip list
+	ipALL = set()
+
 	if args.filename is not None:
 		f = os.path.abspath(args.filename)
 		main(f)
 
 	elif args.directory is not None:
 		path = args.directory
-		for f in os.listdir(path):
-			fullname = os.path.join(path, f)
-			main(fullname)
+		dirLoop(path)
+			
 	else :
 		parser.print_help()
 		exit()
-
-    # call main 
-	main()
-
