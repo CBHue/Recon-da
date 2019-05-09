@@ -64,9 +64,9 @@ class MyPrompt(Cmd):
 
     def emptyline(self):
         print("")
-        print ("Global Session : "+ '\033[95m'+ config.master + '\033[0m')
-        print ("Output Dir     : " + "\033[95m" + config.dumpDir + '\033[0m')
-        print ("Debug: " + '\033[95m' + str(config.debug.value) + '\033[0m')
+        print ("Global Session    : "+ '\033[95m'+ config.master + '\033[0m')
+        print ("Output Dir        : " + "\033[95m" + config.dumpDir + '\033[0m')
+        print ("Debug             : " + '\033[95m' + str(config.debug.value) + '\033[0m')
         r = db_runner("SELECT host, status FROM Hosts WHERE status like '%Stage%'")
         print ("Running Processes : " + '\033[92m' + str(len(r)) + '\033[0m')
         r = db_runner("SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
