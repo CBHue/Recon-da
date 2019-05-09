@@ -116,17 +116,17 @@ class MyPrompt(Cmd):
 
     def do_exit(self, args):
         """Exits from the console"""
-        helper.printC("Closing Queue:")
+        helper.printC("Shutting down queue ...")
         config.work.close()
 
-        helper.printC("Shutting down children:")
+        helper.printC("Shutting down children ...")
         for pid in config.pidLIST:
             helper.printC("Killing active children: " + '\033[0m' + str(pid))
             cmdRunner.realTimeMuxER("pkill -9 -P " + str(pid))
        
         time.sleep(2)
 
-        helper.printC("Shutting down workers:")
+        helper.printC("Shutting down workers ...")
         for p in multiprocessing.active_children():
             helper.printC("Killing: " + '\033[0m' + str(p))
             p.terminate()
