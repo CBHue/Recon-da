@@ -292,7 +292,7 @@ if __name__ == '__main__':
     
     print ("Global Session: "+ '\033[95m'+ config.master + '\033[0m')
     print ("Workers: " + '\033[93m'+ str(vibranium) + '\033[0m')
-    print ("Output Dir: " + '\033[95m'+ config.dumpDir + '\033[0m')
+    print ("Output Dir: " + '\033[96m'+ config.dumpDir + '\033[0m')
     print ("Debug: " + '\033[95m'+ str(config.debug.value) + '\033[0m')
 
     prompt = MyPrompt()
