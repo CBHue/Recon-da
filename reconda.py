@@ -290,10 +290,10 @@ if __name__ == '__main__':
 
     heading.banner()
     
-    print ("Global Session: "+ '\033[95m'+ config.master + '\033[0m')
-    print ("Workers: " + '\033[96m'+ str(vibranium) + '\033[0m')
-    print ("Output Dir: " + '\033[95m'+ config.dumpDir + '\033[0m')
-    print ("Debug: " + '\033[95m'+ str(config.debug.value) + '\033[0m')
+    print ("Global Session : " + '\033[95m'+ config.master + '\033[0m')
+    print ("workers        : " + '\033[92m'+ str(vibranium) + '\033[0m')
+    print ("Output Dir     : " + '\033[95m'+ config.dumpDir + '\033[0m')
+    print ("Debug          : " + '\033[95m'+ str(config.debug.value) + '\033[0m')
 
     prompt = MyPrompt()
     h = prompt.precmd('help')
