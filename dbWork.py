@@ -6,7 +6,7 @@ import sqlite3
 import multiprocessing
 from multiprocessing import Manager
 from ctypes import c_bool
-import helper
+import utils.helper as helper
 
  # Root Check
 if os.geteuid() != 0:

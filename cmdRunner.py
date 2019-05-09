@@ -11,8 +11,8 @@ import sqlite3
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-import config
-import helper
+import dbWork
+import utils.helper as helper
 
 def db_runner(c, query, args=None):
     cur = c.cursor()
@@ -25,7 +25,7 @@ def db_runner(c, query, args=None):
     return results
 
 def whine (message):
-	if config.debug.value is True:
+	if dbWork.debug.value is True:
 		helper.printY(message)
 
 def muxERToo(command):
@@ -38,11 +38,11 @@ def muxER(command):
 	FNULL = open(os.devnull, 'w')
 	p = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=FNULL, shell=True)
 	# Add to shared list
-	config.pidLIST.append(str(p.pid))
+	dbWork.pidLIST.append(str(p.pid))
 	# Get the result
 	(result, err) = p.communicate()
 	# once we finish lets remove it from the queue
-	config.pidLIST.remove(str(p.pid))
+	dbWork.pidLIST.remove(str(p.pid))
 	# return the results
 	return result.decode("utf-8").strip() 
 
@@ -127,10 +127,10 @@ def confirmIP (matchWork, cidr):
 
 		# Add the DB task to the Queue
 		DBcommit = 'INSERT INTO Hosts VALUES (?,?,?)', [h, "Waiting", "No open ports"]
-		config.workDB.put(DBcommit)
+		dbWork.workDB.put(DBcommit)
 
 		# Add the ip work to the Queue
-		config.work.put(h)
+		dbWork.work.put(h)
 		return True
 	except ValueError:
 		helper.printR("Address/Netmask is invalid: "+ '\033[0m' + matchWork + cidr)
@@ -159,7 +159,7 @@ def portLandia (file):
 			if mo: 
 				allPort.add(mo.group(1))
 				DBcommit = 'INSERT INTO results VALUES (?,?,?,?)', [H, mo.group(1), mo.group(2), mo.group(3)]
-				config.workDB.put(DBcommit)
+				dbWork.workDB.put(DBcommit)
 				http = re.search(r'(http|https)',mo.group(3))
 				if http:
 					url = mo.group(3) + "://" + H + ":" + mo.group(1)
@@ -176,7 +176,7 @@ def servicABLE (host,ports,file):
 
 def webTests (network, urls, out, workerName):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (screenshot Nikto dirb)", network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 
 	whine("Running Web Tests on " + str(len(urls)) + " URL(s)")
 	for u in urls:
@@ -198,7 +198,7 @@ def webTests (network, urls, out, workerName):
 
 def udpScan (network, out):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage5 - Running udp unicornscan", network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 	whine("UDP scanning: " + network) 
 	f = out + ".udp"
 	cmd = "unicornscan -mU " + network + " > " + f
@@ -208,7 +208,7 @@ def fin (network, out, s0, workerName):
 	whine("Done with: " + '\033[0m' + network)
 	whine("Files located at: "+ '\033[95m' + out + "*" + '\033[0m')
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Completed", network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 	whine( '\033[92m' + "[" + workerName + "] Session Closed: " + '\033[0m' + s0 )
 	muxER('tput rs1')
 	
@@ -232,16 +232,16 @@ def showResult (selection):
 	cmd = "date"
 
 	if selection is 'ALL':
-		cmd = "find " + config.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
+		cmd = "find " + dbWork.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
 	elif "name" in selection:
-		cmd = "find " + config.dumpDir + " " + selection
+		cmd = "find " + dbWork.dumpDir + " " + selection
 	else:
-		r = db_runner(config.conn, 'SELECT host FROM Hosts WHERE host=?', [selection])
+		r = db_runner(dbWork.conn, 'SELECT host FROM Hosts WHERE host=?', [selection])
 		if len(r) > 0:
 			print (r[0])
 			f = str(r[0]).split("/")[0]
 			f = f.split("\'")[1]
-			cmd = "find " + config.dumpDir + "* \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\) | grep " + f 
+			cmd = "find " + dbWork.dumpDir + "* \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\) | grep " + f 
 		else:
 			helper.printR("This entry does not exist: " + selection)
 			return
@@ -260,7 +260,7 @@ def showResult (selection):
 		print (out)
 	
 	# Find and list screenshots
-	cmd = "find " + config.dumpDir + " -name *.png"
+	cmd = "find " + dbWork.dumpDir + " -name *.png"
 	results = muxER(cmd)
 	if (len(results)) < 1:
 		return
@@ -279,7 +279,7 @@ def sweepER (network, workerName):
 
 	# Add the work to the DB
 	DBcommit = 'INSERT INTO stages VALUES (?,?)', [s0, 'init']
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 
 	s1 = "STAGE_1_" + s0
 	s2 = "STAGE_2_" + s0
@@ -292,12 +292,12 @@ def sweepER (network, workerName):
 	# create a muxer for the session
 	whine('\033[92m' + "[" + workerName + "] Session created: " + '\033[0m' + s0 )
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage1 - Running initial nmap sweep", network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 
 	#
 	# stage 1 - nMap : check for open ports
 	#
-	out = config.dumpDir + s0
+	out = dbWork.dumpDir + s0
 	cmd = pickWeapon("nmap", network, out)
 	muxER(cmd)
 
@@ -305,7 +305,7 @@ def sweepER (network, workerName):
 	# Stage 2 - nMap : get open ports from the gnmap file
 	#
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage2 - Creating list of open ports", network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 	f = out + ".gnmap"
 	allports,urls = portLandia(f)
 	aPorts = "|".join(allports)
@@ -322,15 +322,15 @@ def sweepER (network, workerName):
 	# Stage 3 - nMap : get service description
 	# 
 	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", aPorts, network]
-	config.workDB.put(DBcommit)
-	f = config.serviceDir + s0 + "_ServiceID"
+	dbWork.workDB.put(DBcommit)
+	f = dbWork.serviceDir + s0 + "_ServiceID"
 	cmd = servicABLE(network,allports,f)
 	muxER(cmd)
 	f = f + ".gnmap"
 
 	aPorts = "|".join(allports)
 	DBcommit = 'UPDATE Hosts SET ports=? WHERE host=?', [aPorts, network]
-	config.workDB.put(DBcommit)
+	dbWork.workDB.put(DBcommit)
 
 	#
 	# Stage 4 - Web Tests: ScreenShot, Nikto , dirbuster
