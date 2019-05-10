@@ -8,7 +8,7 @@ import ipaddress
 import dbQueue
 import utils.helper as helper
 from utils.osWork import muxER
-from webTests import webTests
+from web.webTests import webTests
 
 def db_runner(c, query, args=None):
     cur = c.cursor()
