@@ -213,14 +213,15 @@ def sweepER (network, workerName):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage2 - Creating list of open ports", network]
 	dbQueue.workDB.put(DBcommit)
 	f = out + ".gnmap"
-	allports,urls = portLandia(f)
-	aPorts = "|".join(allports)
-	netOut = network + " " + str(allports)
+
+	initPORTs,initURLs = portLandia(f)
+	iPORTstr = "|".join(initPORTs)
+	netOut = network + " " + str(iPORTstr)
 	helper.whine (netOut)
 	
 	# If a host has 0 in set move on ...
 	#########################
-	if len(allports) < 1:
+	if len(initPORTs) < 1:
 		fin(network, out, s0,workerName)
 		return
 
@@ -230,18 +231,23 @@ def sweepER (network, workerName):
 	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", aPorts, network]
 	dbQueue.workDB.put(DBcommit)
 	f = dbQueue.serviceDir + s0 + "_ServiceID"
-	cmd = servicABLE(network,allports,f)
+	cmd = servicABLE(network,initPORTs,f)
 	muxER(cmd)
 	f = f + ".gnmap"
 
-	aPorts = "|".join(allports)
-	DBcommit = 'UPDATE Hosts SET ports=? WHERE host=?', [aPorts, network]
+	# check for updates to the url list
+	PORTs,URLs = portLandia(f)
+	finalPortList = list(set().union(initPORTs, PORTs))
+	finalPORTstr = "|".join(finalPortList)
+	finalUrlList = list(set().union(initURLs, URLs))
+
+	DBcommit = 'UPDATE Hosts SET ports=? WHERE host=?', [finalPORTstr, network]
 	dbQueue.workDB.put(DBcommit)
 
 	#
 	# Stage 4 - Web Tests: ScreenShot, Nikto , dirbuster
 	#
-	webTests(network, urls, out, workerName)
+	webTests(network, finalUrlList, out, workerName)
 
 	#
 	# Stage 5 - unicornscan: UDP
