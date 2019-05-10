@@ -104,7 +104,7 @@ def portLandia (file):
 				allPort.add(mo.group(1))
 				DBcommit = 'INSERT INTO results VALUES (?,?,?,?)', [H, mo.group(1), mo.group(2), mo.group(3)]
 				dbQueue.workDB.put(DBcommit)
-				http = re.search(r'(http|https)',mo.group(3))
+				http = re.search(r'(http|https)',mo.group(3),re.IGNORECASE)
 				if http:
 					url = mo.group(3) + "://" + H + ":" + mo.group(1)
 					httpList.add(url)
