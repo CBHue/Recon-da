@@ -228,7 +228,7 @@ def sweepER (network, workerName):
 	#
 	# Stage 3 - nMap : get service description
 	# 
-	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", aPorts, network]
+	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", iPORTstr, network]
 	dbQueue.workDB.put(DBcommit)
 	f = dbQueue.serviceDir + s0 + "_ServiceID"
 	cmd = servicABLE(network,initPORTs,f)
