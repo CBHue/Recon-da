@@ -36,27 +36,27 @@ def pickWeapon (cmd, host, outFile):
 	return cmd
 
 def validateHost (network):
-	helper.printB("Validating Host: " + '\033[0m' + network)
+	helper.whine('\033[94m' + "Validating Host : " + '\033[0m' + network, "status")
 	cidr = ""
 
 	# Single IP or a network
 	match = re.search(r'(\d+.\d+.\d+.\d+)(/\d+)', network)
 	if match:
 		matchWork = match.group(1)
-		helper.printB("IP Addr: " + '\033[0m' + matchWork)
-		helper.printB("Subnet : " + '\033[0m' + match.group(2))
+		helper.whine('\033[94m' + "IP Addr : " + '\033[0m' + matchWork, "status")
+		helper.whine('\033[94m' + "Subnet  : " + '\033[0m' + match.group(2), "status")
 		cidr = match.group(2)
 
 		if match.group(2) == '/32':
 			confirmIP(matchWork, cidr)
 		else:
-			helper.printB("Expanding network : " + '\033[0m' + network)
+			helper.whine("Expanding network : " + '\033[0m' + network, "status")
 			expandedIPList = ipaddress.ip_network(network)
 			cidr = "/32"
 			for ip in expandedIPList:
 				confirmIP(ip, cidr)
 	else:
-		helper.printB("Single IP: " + '\033[0m' + network)
+		helper.whine('\033[94m' + "Single IP       : " + '\033[0m' + network, "status")
 		matchWork = network	
 		cidr = "/32"
 		confirmIP(matchWork, cidr)
@@ -80,7 +80,7 @@ def confirmIP (matchWork, cidr):
 		helper.printR("Address/Netmask is invalid: "+ '\033[0m' + matchWork + cidr)
 		return False
 	except Exception as e:
-		helper.whine('[validateHost] ' + str(e) + " " + str(matchWork))
+		helper.whine('[validateHost] ' + str(e) + " " + str(matchWork), "error")
 		return False
 
 def portLandia (file):
@@ -108,12 +108,12 @@ def portLandia (file):
 				if http:
 					url = http.group(1).lower() + "://" + H + ":" + mo.group(1)
 					httpList.add(url)
-					helper.whine("Adding URL: " + url)
+					helper.whine("Adding URL: " + url, "debug")
 
 	return allPort,httpList
 
 def servicABLE (host,ports,file):
-	helper.whine("Sevice Identification: " + host)
+	helper.whine("Sevice Identification: " + host, "debug")
 	pL = ','.join(ports)
 	fO = file + ".out"
 	cmd = "nmap -sV -n --randomize-hosts --script discovery,vuln --max-retries 1 -Pn -A -p "+ pL + " -T3 --open " + host + " -oA " + file + " > " + fO
@@ -122,17 +122,17 @@ def servicABLE (host,ports,file):
 def udpScan (network, out):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage5 - Running udp unicornscan", network]
 	dbQueue.workDB.put(DBcommit)
-	helper.whine("UDP scanning: " + network) 
+	helper.whine("UDP scanning: " + network, "debug") 
 	f = out + ".udp"
 	cmd = "unicornscan -mU " + network + " > " + f
 	muxER(cmd)
 
 def fin (network, out, s0, workerName):
-	helper.whine("Done with: " + '\033[0m' + network)
-	helper.whine("Files located at: "+ '\033[95m' + out + "*" + '\033[0m')
+	helper.whine("Done with: " + '\033[0m' + network, "info")
+	helper.whine("Files located at: "+ '\033[95m' + out + "*" + '\033[0m', "debug")
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Completed", network]
 	dbQueue.workDB.put(DBcommit)
-	helper.whine( '\033[92m' + "[" + workerName + "] Session Closed: " + '\033[0m' + s0 )
+	helper.whine('\033[92m' + "[" + workerName + "] Session Closed: " + '\033[0m' + s0, "status")
 	muxER('tput rs1')
 	
 def showResult (selection):
@@ -197,7 +197,7 @@ def sweepER (network, workerName):
 	sd = "ALLDONE_" + s0
 
 	# create a muxer for the session
-	helper.whine('\033[92m' + "[" + workerName + "] Session created: " + '\033[0m' + s0 )
+	helper.whine('\033[92m' + "[" + workerName + "] Session created: " + '\033[0m' + s0, "status")
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage1 - Running initial nmap sweep", network]
 	dbQueue.workDB.put(DBcommit)
 
@@ -218,7 +218,7 @@ def sweepER (network, workerName):
 	initPORTs,initURLs = portLandia(f)
 	iPORTstr = "|".join(initPORTs)
 	netOut = network + " " + str(iPORTstr)
-	helper.whine (netOut)
+	helper.whine (netOut, "debug")
 	
 	# If a host has 0 in set move on ...
 	#########################

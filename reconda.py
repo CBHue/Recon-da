@@ -41,7 +41,7 @@ def MBaku(taskDB):
         if taskDB:
             # need to do some magic here to pass the right data
             s = str(taskDB).strip('()')
-            helper.whine(s)
+            helper.whine(s,"INFO")
             pattern = "\'(.*)\', (\[.*\])"
             match = re.match(pattern,s)
             if not match:
@@ -275,11 +275,14 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-v", "--verbosity",dest="verbosity", help="Verbosity level: DEBUG, INFO, WARN, ERROR", metavar="int")
     parser.add_argument("-w", "--workers",  dest="workers", help="# of processes.\nDefault is 2 * cpu_count", metavar="int")
-    parser.add_argument("-q", "--quiet",    dest="debug", action="store_true", default=False, help="don't print status messages to stdout")
+    #parser.add_argument("-q", "--quiet",    dest="debug", action="store_true", default=False, help="don't print status messages to stdout")
     args = parser.parse_args()
 
-    if args.debug:
-        dbQueue.debug.value = False
+    #if args.debug:
+    #    dbQueue.debug.value = "info"
+    if args.verbosity:
+        print(args.verbosity)
+        dbQueue.debug.value = args.verbosity
 
     # Setup session DB
     conn = dbWork.db_init()  

@@ -11,21 +11,21 @@ def webTests (network, urls, out, workerName):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (screenshot Nikto dirb)", network]
 	dbQueue.workDB.put(DBcommit)
 
-	whine("Running Web Tests on " + str(len(urls)) + " URL(s)")
+	whine("Running Web Tests on " + str(len(urls)) + " URL(s)", "info")
 	for u in urls:
-		whine("URL : " + u)
+		whine("URL : " + u, "debug")
 		match = re.search(r'.*:(\d+)',u)
 		if match:
-			whine( "Taking Screenshot: " + u )
+			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
 			chromeShot(u,f)
 
-			whine( "Running Nikto on: " + u )
+			whine( "Running Nikto on: " + u , "debug")
 			f = out + "_" + match.group(1) + ".nikto"
 			cmd = "nikto -Cgidirs all -host " + u + " -Format txt -output " + f
 			muxER(cmd)
 
-			whine( "Running dirb on: " + u )
+			whine( "Running dirb on: " + u , "debug")
 			f = out + "_" + match.group(1) + ".dirb"
 			cmd = "dirb " + u + " -o " + f
 			muxER(cmd)
@@ -46,6 +46,6 @@ def chromeShot (url,f):
 		driver.get(url)
 		driver.get_screenshot_as_file(f)
 	except Exception as e:
-		whine("screenshot Error:" + str(e))
+		whine("screenshot Error:" + str(e), "debug")
 
 	driver.quit()
