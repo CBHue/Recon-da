@@ -13,6 +13,7 @@ def webTests (network, urls, out, workerName):
 
 	whine("Running Web Tests on " + str(len(urls)) + " URL(s)")
 	for u in urls:
+		whine("URL : " + u)
 		match = re.search(r'.*:(\d+)',u)
 		if match:
 			whine( "Taking Screenshot: " + u )
