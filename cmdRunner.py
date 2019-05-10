@@ -115,7 +115,7 @@ def servicABLE (host,ports,file):
 	helper.whine("Sevice Identification: " + host)
 	pL = ','.join(ports)
 	fO = file + ".out"
-	cmd = "nmap -sV -n --randomize-hosts --script discovery,vuln --max-retries 0 -Pn -A -p "+ pL + " -T3 --open " + host + " -oA " + file + " > " + fO
+	cmd = "nmap -sV -n --randomize-hosts --script discovery,vuln --max-retries 1 -Pn -A -p "+ pL + " -T3 --open " + host + " -oA " + file + " > " + fO
 	return cmd
 
 def udpScan (network, out):

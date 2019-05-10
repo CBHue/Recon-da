@@ -271,8 +271,9 @@ if __name__ == '__main__':
         exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
 
     heading.banner()
-    
+
     parser = ArgumentParser()
+    parser.add_argument("-v", "--verbosity",dest="verbosity", help="Verbosity level: DEBUG, INFO, WARN, ERROR", metavar="int")
     parser.add_argument("-w", "--workers",  dest="workers", help="# of processes.\nDefault is 2 * cpu_count", metavar="int")
     parser.add_argument("-q", "--quiet",    dest="debug", action="store_true", default=False, help="don't print status messages to stdout")
     args = parser.parse_args()
