@@ -1,100 +1,99 @@
 #!/usr/bin/python 
 
 import os
-import random
 import sqlite3
-import multiprocessing
-from multiprocessing import Manager
-from ctypes import c_bool
 import utils.helper as helper
+import dbQueue
 
- # Root Check
+##### DB IS NOT WORKING ... MAKE THIS STREAMLINED ...
+
+# Root Check
 if os.geteuid() != 0:
 	exit("You need to have root privileges to run this script.\nPlease try again using 'sudo'.")
 
-dirPath = os.path.dirname(os.path.realpath(__file__))
+def db_getCursor():
+    conn = sqlite3.connect(dbQueue.DBFILE)
+    c = conn.cursor()
+    return c
 
-# Master key
-############################
-master = str(int(random.randint(9999, 999999)))
+def db_closeCursor(c):
+    c.close()
 
-# Work Queue
-#################################
-work   = multiprocessing.Queue()
-workDB = multiprocessing.Queue()
+def db_runner(conn, query, args=None):
+    #helper.printR("I GOT WORK!!! - " + str(query) + ":" + str(args))
+    #print(conn)
+    try:
+        c = conn.cursor()
+        
+        if args:
+            c.execute(query, args)
+        else:
+            c.execute(query)
 
-manager = Manager()
-pidLIST = manager.list()
+        results = c.fetchall()
+        c.close()
+        return results
+    except Exception as e:
+        print(e)
 
-debug  = multiprocessing.Value(c_bool,True)
+def db_init():
+    try: 
+        os.makedirs(dbQueue.dumpDir)
+        os.makedirs(dbQueue.serviceDir)
+        os.makedirs(dbQueue.dataDIR)
+    except OSError:
+        if not os.path.isdir(dbQueue.dumpDir):
+            raise
+        if not os.path.isdir(dbQueue.serviceDir):
+            raise
+        if not os.path.isdir(dbQueue.dataDIR):
+            raise
 
-# Set up the Dump
-##############################
-dumpDir = dirPath + "/dump/" + master + "/"
-serviceDir = dumpDir + "ScriptOut/"
+    try:
+        # set the database connectiont to autocommit w/ isolation level
+        conn = sqlite3.connect(dbQueue.DBFILE, check_same_thread=False)
+        conn.text_factory = str
+        conn.isolation_level = None
+        #helper.printG("Connection to DB is Good!" + dbQueue.DBFILE)
+        return conn
 
-try: 
-    os.makedirs(dumpDir)
-    os.makedirs(serviceDir)
-except OSError:
-    if not os.path.isdir(dumpDir):
-        raise
+    except Exception:
+        helper.printR("Could not connect to database")
+        helper.printR("Please run install.sh")
+        raise SystemExit
 
-# Set up the Database
-#############################
-dataDIR = dirPath + "/data/" + master + "/"
+def db_setup(conn):
+    #conn = sqlite3.connect(dbQueue.DBFILE)
+    #helper.printR("Setting up DB")
+    c = conn.cursor()
 
-try: 
-    os.makedirs(dataDIR)
-except OSError:
-    if not os.path.isdir(dataDIR):
-        raise
+    c.execute('DROP TABLE IF EXISTS stages')
+    c.execute( '''CREATE TABLE "stages" (
+    	"stage_id" text PRIMARY KEY,
+    	"status" text
+    )''')
 
-DB = "reconda.db"
-DBFILE =  dataDIR + DB
+    c.execute('DROP TABLE IF EXISTS results')
+    c.execute( '''CREATE TABLE "results" (
+    	"host" text,
+    	"port" text,
+    	"proto" text,
+    	"serviceID" text    
+    )''')
 
+    c.execute('DROP TABLE IF EXISTS Hosts')
+    c.execute( '''CREATE TABLE "Hosts" (
+    	"host" text,
+    	"status" text,
+    	"ports" text
+    )''')
 
-def db_setup():
-
-	conn = sqlite3.connect(DBFILE)
-	c = conn.cursor()
-
-	c.execute('DROP TABLE IF EXISTS stages')
-	c.execute( '''CREATE TABLE "stages" (
-		"stage_id" text PRIMARY KEY,
-		"status" text
-	)''')
-
-	c.execute('DROP TABLE IF EXISTS results')
-	c.execute( '''CREATE TABLE "results" (
-		"host" text,
-		"port" text,
-		"proto" text,
-		"serviceID" text    
-	)''')
-
-	c.execute('DROP TABLE IF EXISTS Hosts')
-	c.execute( '''CREATE TABLE "Hosts" (
-		"host" text,
-		"status" text,
-		"ports" text
-	)''')
-
-try:
-    # set the database connectiont to autocommit w/ isolation level
-    conn = sqlite3.connect(DBFILE, check_same_thread=False)
-    conn.text_factory = str
-    conn.isolation_level = None
-
-except Exception:
-    helper.printR("Could not connect to database")
-    helper.printR("Please run install.sh")
-    raise SystemExit
+    c.close()
 
 def db_connect():
     try:
         # set the database connectiont to autocommit w/ isolation level
-        conn = sqlite3.connect(config.DBFILE, check_same_thread=False)
+        conn = sqlite3.connect(dbQueue.DBFILE, check_same_thread=False)
         conn.text_factory = str
         conn.isolation_level = None
         return conn

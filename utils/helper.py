@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+from dbQueue import debug
 
 '''
  
@@ -18,6 +19,10 @@ def printB(out): print("\033[94m{}\033[00m" .format("[-] " + out))
 def printP(out): print("\033[95m{}\033[00m" .format("[-] " + out))  
 def printC(out): print("\033[96m{}\033[00m" .format("[-] " + out))
 def printW(out): print("[$] " + out)
+
+def whine (message):
+	if debug.value is True:
+		printY(message)
 
 def loggER(out,*lvl):
 	logging.basicConfig(level=logging.DEBUG, format='[ \033[95m%(asctime)s\033[00m ] - %(levelname)s - %(message)s')

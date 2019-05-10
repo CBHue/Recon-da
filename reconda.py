@@ -5,13 +5,17 @@ import re
 import time
 import multiprocessing
 from cmd import Cmd
+import configparser
 from argparse import ArgumentParser
 
 # Import local modules
 import heading
 import cmdRunner
 import dbWork
+import dbQueue
 import utils.helper as helper
+from utils.osWork import realTimeMuxER
+from dbWork import db_runner
 
 #
 # This is the worker ... He puts in work
@@ -20,7 +24,7 @@ def wakanda(task,debug,pid):
     workerName = (multiprocessing.current_process()).name    
     while True:
         # Check to see if there is work to do
-        task = dbWork.work.get()
+        task = dbQueue.work.get()
         if task:
             cmdRunner.sweepER(task, workerName)
         time.sleep(2)
@@ -33,11 +37,11 @@ def MBaku(taskDB):
     workerName = (multiprocessing.current_process()).name    
     while True:
         # Check to see if there is work to do
-        taskDB = dbWork.workDB.get()
+        taskDB = dbQueue.workDB.get()
         if taskDB:
             # need to do some magic here to pass the right data
             s = str(taskDB).strip('()')
-            cmdRunner.whine(s)
+            helper.whine(s)
             pattern = "\'(.*)\', (\[.*\])"
             match = re.match(pattern,s)
             if not match:
@@ -46,12 +50,13 @@ def MBaku(taskDB):
             s = match.group(2).strip("[]")
             s = re.sub(r'\'', '', s)
             args = tuple(item.strip() for item in s.split(','))
-            db_runner(sql, args)
+            db_runner(conn, sql, args)
 
     helper.printR("[MBaku] Got the poison pill ... DEAD.")
 
+'''
 def db_runner(query, args=None):
-    cur = dbWork.conn.cursor()
+    cur = dbWork.db_getCursor()
     if args:
         cur.execute(query, args)
     else:
@@ -59,21 +64,21 @@ def db_runner(query, args=None):
     results = cur.fetchall()
     cur.close()
     return results
-
+'''
 class MyPrompt(Cmd):
 
     def emptyline(self):
         print("")
-        print ("Global Session    : "+ '\033[95m'+ dbWork.master + '\033[0m')
-        print ("Output Dir        : " + "\033[95m" + dbWork.dumpDir + '\033[0m')
-        print ("Debug             : " + '\033[95m' + str(dbWork.debug.value) + '\033[0m')
-        r = db_runner("SELECT host, status FROM Hosts WHERE status like '%Stage%'")
+        print ("Global Session    : "+ '\033[95m'+ dbQueue.master + '\033[0m')
+        print ("Output Dir        : " + "\033[95m" + dbQueue.dumpDir + '\033[0m')
+        print ("Debug             : " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
+        r = db_runner(conn, "SELECT host, status FROM Hosts WHERE status like '%Stage%'")
         print ("Running Processes : " + '\033[92m' + str(len(r)) + '\033[0m')
-        r = db_runner("SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
+        r = db_runner(conn, "SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
         print ("Remaining Hosts   : " + '\033[92m' + str(len(r)) + '\033[0m')
 
         print ("")
-        cmdRunner.realTimeMuxER('stty sane')
+        realTimeMuxER('stty sane')
         pass
 
     def do_clear(self, args):
@@ -82,47 +87,47 @@ class MyPrompt(Cmd):
 
     def do_status(self, args):
         """Gets the status of running processes"""
-        print ("Output Dir:" + '\033[95m' + dbWork.dumpDir + '\033[0m')
+        print ("Output Dir:" + '\033[95m' + dbQueue.dumpDir + '\033[0m')
         
         print ("")
         print ("Finished processes:")
         print ("-------------------")
-        r = db_runner("SELECT host,ports FROM Hosts WHERE status like '%Completed%' ORDER BY ports DESC")
+        r = db_runner(conn, "SELECT host,ports FROM Hosts WHERE status like '%Completed%' ORDER BY ports DESC")
         for i in r:
             print (i)
         
         print ("")
         print ("Running processes:")
         print ("------------------")
-        r = db_runner("SELECT host, ports, status FROM Hosts WHERE status like '%Stage%'")
+        r = db_runner(conn, "SELECT host, ports, status FROM Hosts WHERE status like '%Stage%'")
         for i in r:
             print (i)
             
         print ("")
         print ("Hosts waiting for work:")
         print ("-----------------------")
-        r = db_runner("SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
+        r = db_runner(conn, "SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
         print (len(r))
         print ("")
 
     def do_Debug(self, args):
         
-        if dbWork.debug.value is True: 
-            dbWork.debug.value = False
-            print ("Debug: " + '\033[95m' + str(dbWork.debug.value) + '\033[0m')
+        if dbQueue.debug.value is True: 
+            dbQueue.debug.value = False
+            print ("Debug: " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
         else:
-            dbWork.debug.value = True
-            print ("Debug: " + '\033[95m' + str(dbWork.debug.value) + '\033[0m')
+            dbQueue.debug.value = True
+            print ("Debug: " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
 
     def do_exit(self, args):
         """Exits from the console"""
         helper.printC("Shutting down queue ...")
-        dbWork.work.close()
+        dbQueue.work.close()
 
         helper.printC("Shutting down children ...")
-        for pid in dbWork.pidLIST:
+        for pid in dbQueue.pidLIST:
             helper.printC("Killing active children: " + '\033[0m' + str(pid))
-            cmdRunner.realTimeMuxER("pkill -9 -P " + str(pid))
+            realTimeMuxER("pkill -9 -P " + str(pid))
        
         time.sleep(2)
 
@@ -132,7 +137,7 @@ class MyPrompt(Cmd):
             p.terminate()
 
         helper.printC("Done ...")
-        cmdRunner.realTimeMuxER('stty sane')
+        realTimeMuxER('stty sane')
         raise SystemExit
 
     #
@@ -156,7 +161,7 @@ class MyPrompt(Cmd):
             # Validate the host
             out = cmdRunner.validateHost(network)
             if not out: return
-            #dbWork.work.put(out)
+            #dbQueue.work.put(out)
 
         else:
             print ("")
@@ -181,13 +186,13 @@ class MyPrompt(Cmd):
                     return
 
                 print ("Loaded " + str(len(HostSet)) + " Hosts")
-                print ("Output Dir: " + '\033[95m'+ dbWork.dumpDir + '\033[0m')
+                print ("Output Dir: " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
 
                 # validate the hosts then queue them up
                 for host in HostList:
                     vhost = cmdRunner.validateHost(host)
                     if not vhost: continue
-                    dbWork.work.put(vhost)
+                    dbQueue.work.put(vhost)
 
             except IOError:
                 print ("Could not read file:"+ hostFile)
@@ -203,7 +208,7 @@ class MyPrompt(Cmd):
         ShowAllResults dirb
         ShowAllResults udp
         """
-        print ("Output Dir: " + '\033[95m'+ dbWork.dumpDir + '\033[0m')
+        print ("Output Dir: " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
         if key:
             cmdRunner.showResult("-name \"*." + key + "\"")
         else:
@@ -212,12 +217,14 @@ class MyPrompt(Cmd):
     def do_ShowHostResults(self, key):
         # get the output from completed process
         if key:
-            cmdRunner.showResult(key)
+            r = db_runner(conn, 'SELECT host FROM Hosts WHERE host=?', [key])
+            cmdRunner.showResult(r)
         else:
             print ("")
             print ("Choose the finished report to view:")
             print ("Example: ShowHostResults 10.10.10.18/32")
-            r = cmdRunner.db_runner(dbWork.conn, "SELECT host,ports FROM Hosts WHERE status like 'Completed%' ORDER BY ports DESC")
+            #c = dbQueue.db_getCursor()
+            r = db_runner(conn, "SELECT host,ports FROM Hosts WHERE status like 'Completed%' ORDER BY ports DESC")
             for i in r:
                 print (i)
             print ("")
@@ -228,7 +235,7 @@ class MyPrompt(Cmd):
         Assumes its installed in /opt/
         Run this to create an HTML of your completed nMap Scans
         """
-        print ("Output Dir: " + '\033[95m'+ dbWork.dumpDir + '\033[0m')
+        print ("Output Dir: " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
         # We are going to try and import nMapMerger here
         from os import sys, path
         sys.path.append('/opt/')
@@ -238,15 +245,15 @@ class MyPrompt(Cmd):
             print ("Failed to import nMapMerge")
 
         try:
-            cmd = "find " + dbWork.dumpDir + " \\( -name \"*.xml\" \\)"
-            xmlFinder = cmdRunner.muxER(cmd)
+            cmd = "find " + dbQueue.dumpDir + " \\( -name \"*.xml\" \\)"
+            xmlFinder = realTimeMuxER(cmd)
             xmlList = xmlFinder.split('\n')
             s = set(xmlList)
             print ("XMLs to parse: " + str(len(s)))
             if len(s) > 1:
                 main_nMapMerger(s)
             else:
-                print ("No XML files in: " + dbWork.dumpDir)
+                print ("No XML files in: " + dbQueue.dumpDir)
         except Exception as e:
             print ("Error with nmapMerger ... " + str(e))
 
@@ -263,37 +270,36 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
 
+    heading.banner()
+    
     parser = ArgumentParser()
     parser.add_argument("-w", "--workers",  dest="workers", help="# of processes.\nDefault is 2 * cpu_count", metavar="int")
     parser.add_argument("-q", "--quiet",    dest="debug", action="store_true", default=False, help="don't print status messages to stdout")
     args = parser.parse_args()
 
-    # Setup session DB
-    dbWork.db_setup()
-
     if args.debug:
-        dbWork.debug.value = False
+        dbQueue.debug.value = False
+
+    # Setup session DB
+    conn = dbWork.db_init()  
+    dbWork.db_setup(conn)
 
     # Make the Pool of workers [Default is 2 * cpu count]
     workers = multiprocessing.cpu_count() * 2
-    
     if args.workers:
         workers = int(args.workers)
-    
     vibranium = workers
     
     for i in range(vibranium):
-        multiprocessing.Process(target=wakanda, args=(dbWork.work,dbWork.debug,dbWork.pidLIST)).start()
+        multiprocessing.Process(target=wakanda, args=(dbQueue.work,dbQueue.debug,dbQueue.pidLIST)).start()
 
     # DB Worker
-    multiprocessing.Process(target=MBaku, args=(dbWork.workDB,)).start()
-
-    heading.banner()
+    multiprocessing.Process(target=MBaku, args=(dbQueue.workDB,)).start()
     
-    print ("Global Session : " + '\033[95m'+ dbWork.master + '\033[0m')
+    print ("Global Session : " + '\033[95m'+ dbQueue.master + '\033[0m')
     print ("workers        : " + '\033[92m'+ str(vibranium) + '\033[0m')
-    print ("Output Dir     : " + '\033[95m'+ dbWork.dumpDir + '\033[0m')
-    print ("Debug          : " + '\033[95m'+ str(dbWork.debug.value) + '\033[0m')
+    print ("Output Dir     : " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
+    print ("Debug          : " + '\033[95m'+ str(dbQueue.debug.value) + '\033[0m')
 
     prompt = MyPrompt()
     h = prompt.precmd('help')

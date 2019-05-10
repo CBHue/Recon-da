@@ -2,17 +2,13 @@
 
 import os
 import re
-import sys
 import time
-import subprocess
-import shlex
 import ipaddress
-import sqlite3
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
-import dbWork
+import dbQueue
 import utils.helper as helper
+from utils.osWork import muxER
+from webTests import webTests
 
 def db_runner(c, query, args=None):
     cur = c.cursor()
@@ -23,38 +19,6 @@ def db_runner(c, query, args=None):
     results = cur.fetchall()
     cur.close()
     return results
-
-def whine (message):
-	if dbWork.debug.value is True:
-		helper.printY(message)
-
-def muxERToo(command):
-	result =[]
-	result = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE).communicate()[0].decode('utf-8').strip()
-	return result
-
-def muxER(command):
-	result =[]
-	FNULL = open(os.devnull, 'w')
-	p = subprocess.Popen([command], stdout=subprocess.PIPE, stderr=FNULL, shell=True)
-	# Add to shared list
-	dbWork.pidLIST.append(str(p.pid))
-	# Get the result
-	(result, err) = p.communicate()
-	# once we finish lets remove it from the queue
-	dbWork.pidLIST.remove(str(p.pid))
-	# return the results
-	return result.decode("utf-8").strip() 
-
-def realTimeMuxER(command):
-	p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-	while True:
-		output = p.stdout.readline().decode()
-		if output == '' and p.poll() is not None:
-			break
-		if output:
-			print(output.strip())
-	rc = p.poll()
 
 def pickWeapon (cmd, host, outFile):
 	tools = {}
@@ -70,26 +34,6 @@ def pickWeapon (cmd, host, outFile):
 		tools["fping"] = "fping -a -r0 -g $host"
 
 	return cmd
-
-def chromeShot (url,f):
-	chrome_options = Options()
-	chrome_options.add_argument("--headless")
-	chrome_options.add_argument("--window-size=1920x1080")
-	chrome_options.add_argument("--no-sandbox")
-	chrome_options.add_argument("--user-data-dir /tmp")
-	chrome_options.add_argument('--ignore-certificate-errors')
-
-	chrome_driver = "/usr/bin/chromedriver"
-	driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
-	driver.set_page_load_timeout(3)
-
-	try:
-		driver.get(url)
-		driver.get_screenshot_as_file(f)
-	except Exception as e:
-		whine("screenshot Error:" + str(e))
-
-	driver.quit()
 
 def validateHost (network):
 	helper.printB("Validating Host: " + '\033[0m' + network)
@@ -127,16 +71,16 @@ def confirmIP (matchWork, cidr):
 
 		# Add the DB task to the Queue
 		DBcommit = 'INSERT INTO Hosts VALUES (?,?,?)', [h, "Waiting", "No open ports"]
-		dbWork.workDB.put(DBcommit)
+		dbQueue.workDB.put(DBcommit)
 
 		# Add the ip work to the Queue
-		dbWork.work.put(h)
+		dbQueue.work.put(h)
 		return True
 	except ValueError:
 		helper.printR("Address/Netmask is invalid: "+ '\033[0m' + matchWork + cidr)
 		return False
 	except Exception as e:
-		whine('[validateHost] ' + str(e) + " " + str(matchWork))
+		helper.whine('[validateHost] ' + str(e) + " " + str(matchWork))
 		return False
 
 def portLandia (file):
@@ -159,7 +103,7 @@ def portLandia (file):
 			if mo: 
 				allPort.add(mo.group(1))
 				DBcommit = 'INSERT INTO results VALUES (?,?,?,?)', [H, mo.group(1), mo.group(2), mo.group(3)]
-				dbWork.workDB.put(DBcommit)
+				dbQueue.workDB.put(DBcommit)
 				http = re.search(r'(http|https)',mo.group(3))
 				if http:
 					url = mo.group(3) + "://" + H + ":" + mo.group(1)
@@ -168,80 +112,42 @@ def portLandia (file):
 	return allPort,httpList
 
 def servicABLE (host,ports,file):
-	whine("Sevice Identification: " + host)
+	helper.whine("Sevice Identification: " + host)
 	pL = ','.join(ports)
 	fO = file + ".out"
 	cmd = "nmap -sV -n --randomize-hosts --script discovery,vuln --max-retries 0 -Pn -A -p "+ pL + " -T3 --open " + host + " -oA " + file + " > " + fO
 	return cmd
 
-def webTests (network, urls, out, workerName):
-	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (screenshot Nikto dirb)", network]
-	dbWork.workDB.put(DBcommit)
-
-	whine("Running Web Tests on " + str(len(urls)) + " URL(s)")
-	for u in urls:
-		match = re.search(r'.*:(\d+)',u)
-		if match:
-			whine( "Taking Screenshot: " + u )
-			f = out + "_Port_" + match.group(1) + ".png"
-			chromeShot(u,f)
-
-			whine( "Running Nikto on: " + u )
-			f = out + "_" + match.group(1) + ".nikto"
-			cmd = "nikto -Cgidirs all -host " + u + " -Format txt -output " + f
-			muxER(cmd)
-
-			whine( "Running dirb on: " + u )
-			f = out + "_" + match.group(1) + ".dirb"
-			cmd = "dirb " + u + " -o " + f
-			muxER(cmd)
-
 def udpScan (network, out):
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage5 - Running udp unicornscan", network]
-	dbWork.workDB.put(DBcommit)
-	whine("UDP scanning: " + network) 
+	dbQueue.workDB.put(DBcommit)
+	helper.whine("UDP scanning: " + network) 
 	f = out + ".udp"
 	cmd = "unicornscan -mU " + network + " > " + f
 	muxER(cmd)
 
 def fin (network, out, s0, workerName):
-	whine("Done with: " + '\033[0m' + network)
-	whine("Files located at: "+ '\033[95m' + out + "*" + '\033[0m')
+	helper.whine("Done with: " + '\033[0m' + network)
+	helper.whine("Files located at: "+ '\033[95m' + out + "*" + '\033[0m')
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Completed", network]
-	dbWork.workDB.put(DBcommit)
-	whine( '\033[92m' + "[" + workerName + "] Session Closed: " + '\033[0m' + s0 )
+	dbQueue.workDB.put(DBcommit)
+	helper.whine( '\033[92m' + "[" + workerName + "] Session Closed: " + '\033[0m' + s0 )
 	muxER('tput rs1')
 	
-#
-# Proc killer: prob not a good idea ...
-#
-def killER (proc):
-	ps = "ps -ef | grep "+ proc + " | grep -v grep"
-	pkill = muxER(ps)
-	pList = pkill.split('\n')
-	for p in pList:
-		p = p.rstrip("\n")
-		match = re.search(r'root\s+(\d+).*\d\d:\d\d:\d\d(.*)',p)
-		if match:
-			ps = "kill -9 " + match.group(1)
-			helper.printR("killing " + match.group(2))
-			muxER(ps)
-			time.sleep(1)
-
 def showResult (selection):
 	cmd = "date"
 
 	if selection is 'ALL':
-		cmd = "find " + dbWork.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
+		cmd = "find " + dbQueue.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
 	elif "name" in selection:
-		cmd = "find " + dbWork.dumpDir + " " + selection
+		cmd = "find " + dbQueue.dumpDir + " " + selection
 	else:
-		r = db_runner(dbWork.conn, 'SELECT host FROM Hosts WHERE host=?', [selection])
+		r = selection
 		if len(r) > 0:
 			print (r[0])
 			f = str(r[0]).split("/")[0]
 			f = f.split("\'")[1]
-			cmd = "find " + dbWork.dumpDir + "* \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\) | grep " + f 
+			cmd = "find " + dbQueue.dumpDir + "* \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\) | grep " + f 
 		else:
 			helper.printR("This entry does not exist: " + selection)
 			return
@@ -260,14 +166,14 @@ def showResult (selection):
 		print (out)
 	
 	# Find and list screenshots
-	cmd = "find " + dbWork.dumpDir + " -name *.png"
+	cmd = "find " + dbQueue.dumpDir + " -name *.png"
 	results = muxER(cmd)
 	if (len(results)) < 1:
 		return
 	fList = results.split('\n')
 	helper.printP("HTTP Screenshots:")
 	for f in fList:
-		if not os.path.isfile(f): continue
+		#if not os.path.isfile(f): continue
 		helper.printW("file://" + f)
 	print ("")
 
@@ -279,7 +185,7 @@ def sweepER (network, workerName):
 
 	# Add the work to the DB
 	DBcommit = 'INSERT INTO stages VALUES (?,?)', [s0, 'init']
-	dbWork.workDB.put(DBcommit)
+	dbQueue.workDB.put(DBcommit)
 
 	s1 = "STAGE_1_" + s0
 	s2 = "STAGE_2_" + s0
@@ -290,14 +196,14 @@ def sweepER (network, workerName):
 	sd = "ALLDONE_" + s0
 
 	# create a muxer for the session
-	whine('\033[92m' + "[" + workerName + "] Session created: " + '\033[0m' + s0 )
+	helper.whine('\033[92m' + "[" + workerName + "] Session created: " + '\033[0m' + s0 )
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage1 - Running initial nmap sweep", network]
-	dbWork.workDB.put(DBcommit)
+	dbQueue.workDB.put(DBcommit)
 
 	#
 	# stage 1 - nMap : check for open ports
 	#
-	out = dbWork.dumpDir + s0
+	out = dbQueue.dumpDir + s0
 	cmd = pickWeapon("nmap", network, out)
 	muxER(cmd)
 
@@ -305,12 +211,12 @@ def sweepER (network, workerName):
 	# Stage 2 - nMap : get open ports from the gnmap file
 	#
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage2 - Creating list of open ports", network]
-	dbWork.workDB.put(DBcommit)
+	dbQueue.workDB.put(DBcommit)
 	f = out + ".gnmap"
 	allports,urls = portLandia(f)
 	aPorts = "|".join(allports)
 	netOut = network + " " + str(allports)
-	whine (netOut)
+	helper.whine (netOut)
 	
 	# If a host has 0 in set move on ...
 	#########################
@@ -322,15 +228,15 @@ def sweepER (network, workerName):
 	# Stage 3 - nMap : get service description
 	# 
 	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", aPorts, network]
-	dbWork.workDB.put(DBcommit)
-	f = dbWork.serviceDir + s0 + "_ServiceID"
+	dbQueue.workDB.put(DBcommit)
+	f = dbQueue.serviceDir + s0 + "_ServiceID"
 	cmd = servicABLE(network,allports,f)
 	muxER(cmd)
 	f = f + ".gnmap"
 
 	aPorts = "|".join(allports)
 	DBcommit = 'UPDATE Hosts SET ports=? WHERE host=?', [aPorts, network]
-	dbWork.workDB.put(DBcommit)
+	dbQueue.workDB.put(DBcommit)
 
 	#
 	# Stage 4 - Web Tests: ScreenShot, Nikto , dirbuster
