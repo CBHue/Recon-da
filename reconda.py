@@ -179,7 +179,7 @@ class MyPrompt(Cmd):
             try:
                 HostSet = set(line.strip() for line in open(hostFile))
                 HostList = list(HostSet)
-                HostList = filter(None, HostList)
+                #HostList = filter(None, HostList)
 
                 if len(HostList) < 1:
                     print ("No Hosts loaded ... Check File:" + hostFile)
