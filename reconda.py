@@ -9,7 +9,7 @@ import configparser
 from argparse import ArgumentParser
 
 # Import local modules
-import heading
+import utils.heading
 import cmdRunner
 import dbWork
 import dbQueue
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     if os.geteuid() != 0:
         exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
 
-    heading.banner()
+    utils.heading.banner()
 
     parser = ArgumentParser()
     parser.add_argument("-v", "--verbosity",dest="verbosity", help="Verbosity level: DEBUG, INFO, WARN, ERROR", metavar="int")
