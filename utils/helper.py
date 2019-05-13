@@ -32,13 +32,23 @@ def whine(out,lvl=""):
 	if lvl:
 		lvl = lvl.upper()
 
-	# Always print status messages
+	# If DEBUG print everything ...
+	if debug.value.upper() == "DEBUG":
+		if type(out) == dict:
+			for x in out:
+				print('\033[96m{0:16}: {1}\033[00m'.format("[-] " + x, out[x]))
+		else:
+			print("\033[96m{}\033[00m" .format("[ " + ts + " - DEBUG - ] " + '\033[0m' + out))
+
+	# If status print it 
 	if "STATUS" in lvl:
 		if type(out) == dict:
 			for x in out:
 				print('\033[92m{0:16}: {1}\033[00m'.format(x, out[x]))
 		else:
 			print("\033[92m{}\033[00m" .format("[ " + ts + " - STATUS - ] " + '\033[0m' + out ))
+
+
 
 	# if verbosity matches lvl then print it ... otherwise ignore it
 	if debug.value.upper() in lvl:
