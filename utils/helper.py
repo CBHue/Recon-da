@@ -32,13 +32,15 @@ def whine(out,lvl=""):
 	if lvl:
 		lvl = lvl.upper()
 
-	# If DEBUG print everything ...
+	# If DEBUG print everything and return
 	if debug.value.upper() == "DEBUG":
 		if type(out) == dict:
 			for x in out:
 				print('\033[96m{0:16}: {1}\033[00m'.format("[-] " + x, out[x]))
 		else:
 			print("\033[96m{}\033[00m" .format("[ " + ts + " - DEBUG - ] " + '\033[0m' + out))
+
+		return
 
 	# If status print it 
 	if "STATUS" in lvl:
@@ -48,7 +50,7 @@ def whine(out,lvl=""):
 		else:
 			print("\033[92m{}\033[00m" .format("[ " + ts + " - STATUS - ] " + '\033[0m' + out ))
 
-
+		return
 
 	# if verbosity matches lvl then print it ... otherwise ignore it
 	if debug.value.upper() in lvl:
@@ -76,17 +78,3 @@ def whine(out,lvl=""):
 			else:
 				print("\033[93m{}\033[00m" .format("[ " + ts + " - INFO - ] " + '\033[0m' + out))
 				#logging.debug("This is a message: %r", out)
-
-		elif "DEBUG" in lvl:
-			if type(out) == dict:
-				for x in out:
-					print('\033[96m{0:16}: {1}\033[00m'.format("[-] " + x, out[x]))
-			else:
-				print("\033[96m{}\033[00m" .format("[ " + ts + " - DEBUG - ] " + '\033[0m' + out))
-
-		elif "STATUS" in lvl:
-			if type(out) == dict:
-				for x in out:
-					print('\033[92m{0:16}: {1}\033[00m'.format(x, out[x]))
-			else:
-				print("\033[92m{}\033[00m" .format("[ " + ts + " - STATUS - ] " + '\033[0m' + out ))

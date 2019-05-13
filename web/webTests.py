@@ -18,9 +18,9 @@ def webTests (network, urls, out, workerName):
 		if match:
 
 			whine( "Running Metasploit http_version on: " + u , "debug")
-			f = out + "_" + match.group(1) + ".msfAuxilary"
-			cmd = "msfconsole -x \"use  auxiliary/scanner/http/http_version;set rhosts " + network + ";set rport 8080; run; exit\" > " + f
-			print (cmd)
+			f = out + "_" + match.group(1) + ".msfAuxilary.out"
+			cmd = "msfconsole -x \"use  auxiliary/scanner/http/http_version;set rhosts " + network + ";set rport " + match.group(1) + "; run; exit\" > " + f
+			muxER(cmd)
 
 			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
