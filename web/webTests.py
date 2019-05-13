@@ -17,10 +17,8 @@ def webTests (network, urls, out, workerName):
 		match = re.search(r'.*:(\d+)',u)
 		if match:
 
-			whine( "Running Metasploit http_version on: " + u , "debug")
-			f = out + "_" + match.group(1) + ".msfAuxilary.out"
-			cmd = "msfconsole -x \"use  auxiliary/scanner/http/http_version;set rhosts " + network + ";set rport " + match.group(1) + "; run; exit\" > " + f
-			muxER(cmd)
+			whine( "Running Metasploit Modules: " + u , "debug")
+			msfHTTPAuxilary(network,match.group(1),out)
 
 			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
@@ -56,5 +54,20 @@ def chromeShot (url,f):
 
 	driver.quit()
 
-#def msfAuxilary():
+def msfHTTPAuxilary(host,port,output):
 #	msfconsole -x "use  auxiliary/scanner/http/http_version;set rhosts 10.156.158.22;set rport 8080; run; exit" 
+	msf = {
+		'http_version' 	: 'auxiliary/scanner/http/http_version',
+		'options' 		: 'auxiliary/scanner/http/options',
+		'cert' 			: 'auxiliary/scanner/http/cert',
+		'robots_txt' 	: 'auxiliary/scanner/http/robots_txt',
+		'title' 		: 'auxiliary/scanner/http/title',
+		'http_header' 	: 'auxiliary/scanner/http/http_header',
+		'http_put' 		: 'auxiliary/scanner/http/http_put'
+	 }
+
+	for module in msf:
+		whine( "Running Metasploit Module: " + module + " on: " + u , "debug")
+		f = out + "_" + match.group(1) + "_" + module + ".out"
+		cmd = "msfconsole -x \"use  " + msf[module] + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
+		muxER(cmd)
