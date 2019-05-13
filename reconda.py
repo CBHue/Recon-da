@@ -178,21 +178,18 @@ class MyPrompt(Cmd):
         if hostFile:
             try:
                 HostSet = set(line.strip() for line in open(hostFile))
-                HostList = list(HostSet)
-                #HostList = filter(None, HostList)
+                HostList = [i for i in HostSet if i] 
 
                 if len(HostList) < 1:
                     print ("No Hosts loaded ... Check File:" + hostFile)
                     return
 
-                print ("Loaded " + str(len(HostSet)) + " Hosts")
+                print ("Loaded " + str(len(HostList)) + " Hosts")
                 print ("Output Dir: " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
 
                 # validate the hosts then queue them up
                 for host in HostList:
                     vhost = cmdRunner.validateHost(host)
-                    if not vhost: continue
-                    dbQueue.work.put(vhost)
 
             except IOError:
                 print ("Could not read file:"+ hostFile)
@@ -275,11 +272,8 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("-v", "--verbosity",dest="verbosity", help="Verbosity level: DEBUG, INFO, WARN, ERROR", metavar="int")
     parser.add_argument("-w", "--workers",  dest="workers", help="# of processes.\nDefault is 2 * cpu_count", metavar="int")
-    #parser.add_argument("-q", "--quiet",    dest="debug", action="store_true", default=False, help="don't print status messages to stdout")
     args = parser.parse_args()
 
-    #if args.debug:
-    #    dbQueue.debug.value = "info"
     if args.verbosity:
         print(args.verbosity)
         dbQueue.debug.value = args.verbosity

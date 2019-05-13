@@ -6,6 +6,9 @@ import multiprocessing
 from multiprocessing import Manager
 from ctypes import c_bool, c_wchar_p
 
+# Root Check
+if os.geteuid() != 0:
+	exit("You need to have root privileges to run this script.\nPlease try again using 'sudo'.")
 
 dirPath = os.path.dirname(os.path.realpath(__file__))
 

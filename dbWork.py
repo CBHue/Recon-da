@@ -5,12 +5,6 @@ import sqlite3
 import utils.helper as helper
 import dbQueue
 
-##### DB IS NOT WORKING ... MAKE THIS STREAMLINED ...
-
-# Root Check
-if os.geteuid() != 0:
-	exit("You need to have root privileges to run this script.\nPlease try again using 'sudo'.")
-
 def db_getCursor():
     conn = sqlite3.connect(dbQueue.DBFILE)
     c = conn.cursor()
@@ -20,8 +14,6 @@ def db_closeCursor(c):
     c.close()
 
 def db_runner(conn, query, args=None):
-    #helper.printR("I GOT WORK!!! - " + str(query) + ":" + str(args))
-    #print(conn)
     try:
         c = conn.cursor()
         
@@ -54,7 +46,6 @@ def db_init():
         conn = sqlite3.connect(dbQueue.DBFILE, check_same_thread=False)
         conn.text_factory = str
         conn.isolation_level = None
-        #helper.printG("Connection to DB is Good!" + dbQueue.DBFILE)
         return conn
 
     except Exception:
@@ -63,8 +54,6 @@ def db_init():
         raise SystemExit
 
 def db_setup(conn):
-    #conn = sqlite3.connect(dbQueue.DBFILE)
-    #helper.printR("Setting up DB")
     c = conn.cursor()
 
     c.execute('DROP TABLE IF EXISTS stages')
