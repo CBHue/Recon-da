@@ -16,6 +16,12 @@ def webTests (network, urls, out, workerName):
 		whine("URL : " + u, "debug")
 		match = re.search(r'.*:(\d+)',u)
 		if match:
+
+			whine( "Running Metasploit http_version on: " + u , "debug")
+			f = out + "_" + match.group(1) + ".msfAuxilary"
+			cmd = "msfconsole -x \"use  auxiliary/scanner/http/http_version;set rhosts " + network + ";set rport 8080; run; exit\" > " + f
+			print ("cmd")
+			
 			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
 			chromeShot(u,f)
@@ -49,3 +55,6 @@ def chromeShot (url,f):
 		whine("screenshot Error:" + str(e), "debug")
 
 	driver.quit()
+
+def msfAuxilary():
+	msfconsole -x "use  auxiliary/scanner/http/http_version;set rhosts 10.156.158.22;set rport 8080; run; exit" > output.txt
