@@ -18,7 +18,8 @@ def webTests (network, urls, out, workerName):
 		if match:
 
 			whine( "Running Metasploit Modules: " + u , "debug")
-			msfHTTPAuxilary(network,match.group(1),out)
+			f = out + "_" + match.group(1) + "_" 
+			msfHTTPAuxilary(network,match.group(1),f)
 
 			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
@@ -68,6 +69,6 @@ def msfHTTPAuxilary(host,port,output):
 
 	for module in msf:
 		whine( "Running Metasploit Module: " + module + " on: " + host , "debug")
-		f = out + "_" + match.group(1) + "_" + module + ".out"
+		f = output + module + ".out"
 		cmd = "msfconsole -x \"use  " + msf[module] + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
 		muxER(cmd)
