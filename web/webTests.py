@@ -21,7 +21,7 @@ def webTests (network, urls, out, workerName):
 			f = out + "_" + match.group(1) + ".msfAuxilary"
 			cmd = "msfconsole -x \"use  auxiliary/scanner/http/http_version;set rhosts " + network + ";set rport 8080; run; exit\" > " + f
 			print ("cmd")
-			
+
 			whine( "Taking Screenshot: " + u , "debug")
 			f = out + "_Port_" + match.group(1) + ".png"
 			chromeShot(u,f)
@@ -56,5 +56,5 @@ def chromeShot (url,f):
 
 	driver.quit()
 
-def msfAuxilary():
-	msfconsole -x "use  auxiliary/scanner/http/http_version;set rhosts 10.156.158.22;set rport 8080; run; exit" > output.txt
+#def msfAuxilary():
+#	msfconsole -x "use  auxiliary/scanner/http/http_version;set rhosts 10.156.158.22;set rport 8080; run; exit" 
