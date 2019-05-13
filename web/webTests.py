@@ -67,7 +67,7 @@ def msfHTTPAuxilary(host,port,output):
 	 }
 
 	for module in msf:
-		whine( "Running Metasploit Module: " + module + " on: " + u , "debug")
+		whine( "Running Metasploit Module: " + module + " on: " + host , "debug")
 		f = out + "_" + match.group(1) + "_" + module + ".out"
 		cmd = "msfconsole -x \"use  " + msf[module] + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
 		muxER(cmd)
