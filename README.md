@@ -1,4 +1,4 @@
-![alt text](https://github.com/CBHue/Recon-da/blob/master/reconda.png)
+![alt text](https://github.com/CBHue/Recon-da/blob/master/utils/reconda.png)
 
 <pre>usage: reconda.py [-h] [-w int] [-q]
 
