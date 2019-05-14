@@ -17,7 +17,7 @@ def webTests (network, urls, out, workerName):
 		match = re.search(r'.*:(\d+)',u)
 		if match:
 
-			whine( "Running Metasploit Modules: " + u , "debug")
+			whine( "Running Metasploit Modules: " + network + ":" + match.group(1) , "debug")
 			f = out + "_" + match.group(1) + "_" 
 			msfHTTPAuxilary(network,match.group(1),f)
 
@@ -56,19 +56,27 @@ def chromeShot (url,f):
 	driver.quit()
 
 def msfHTTPAuxilary(host,port,output):
-#	msfconsole -x "use  auxiliary/scanner/http/http_version;set rhosts 10.156.158.22;set rport 8080; run; exit" 
-	msf = {
-		'http_version' 	: 'auxiliary/scanner/http/http_version',
-		'options' 		: 'auxiliary/scanner/http/options',
-		'cert' 			: 'auxiliary/scanner/http/cert',
-		'robots_txt' 	: 'auxiliary/scanner/http/robots_txt',
-		'title' 		: 'auxiliary/scanner/http/title',
-		'http_header' 	: 'auxiliary/scanner/http/http_header',
-		'http_put' 		: 'auxiliary/scanner/http/http_put'
-	 }
+	#msf = {
+	#	'http_version' 	: 'auxiliary/scanner/http/http_version',
+	#	'options' 		: 'auxiliary/scanner/http/options',
+	#	'cert' 			: 'auxiliary/scanner/http/cert',
+	#	'robots_txt' 	: 'auxiliary/scanner/http/robots_txt',
+	#	'title' 		: 'auxiliary/scanner/http/title',
+	#	'http_header' 	: 'auxiliary/scanner/http/http_header',
+	#	'http_put' 		: 'auxiliary/scanner/http/http_put'
+	#}
 
-	for module in msf:
-		whine( "Running Metasploit Module: " + module + " on: " + host , "debug")
-		f = output + module + ".out"
-		cmd = "msfconsole -x \"use  " + msf[module] + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
+	import configparser
+	config = configparser.ConfigParser()
+	msfConfig = os.path.abspath(os.path.dirname(__file__)) + "utils/msf.ini"
+	config.read(msfConfig)
+	MSF = ast.literal_eval(config.get("METASPLOIT_SAFE_CHECKS", "msfLIST"))
+	
+	r = re.compile(".*http")
+	msfLIST = list(filter(r.match, MSF))  
+	
+	for module in msfLIST:
+		whine( "Running Metasploit Module: " + module, "debug")
+		f = output + "Metasploit_" + module + ".out"
+		cmd = "msfconsole -x \"use  " + module + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
 		muxER(cmd)
