@@ -137,13 +137,14 @@ def fin (network, out, s0, workerName):
 	
 def showResult (selection):
 	cmd = "date"
-
+	helper.whine("Search key: "+ '\033[95m' + selection + '\033[0m', "debug")
 	if selection is 'ALL':
 		cmd = "find " + dbQueue.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
 	elif "name" in selection:
 		cmd = "find " + dbQueue.dumpDir + " " + selection
 	else:
 		r = selection
+
 		if len(r) > 0:
 			print (r[0])
 			f = str(r[0]).split("/")[0]

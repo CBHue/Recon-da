@@ -207,7 +207,7 @@ class MyPrompt(Cmd):
         """
         print ("Output Dir: " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
         if key:
-            cmdRunner.showResult("-name \"*." + key + "\"")
+            cmdRunner.showResult("-name \"*" + key + "*\"")
         else:
             cmdRunner.showResult("ALL")        
 
