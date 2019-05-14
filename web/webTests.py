@@ -1,7 +1,6 @@
 
 import os
 import re
-import ast
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -58,19 +57,10 @@ def chromeShot (url,f):
 	driver.quit()
 
 def msfHTTPAuxilary(host,port,output):
-	#msf = {
-	#	'http_version' 	: 'auxiliary/scanner/http/http_version',
-	#	'options' 		: 'auxiliary/scanner/http/options',
-	#	'cert' 			: 'auxiliary/scanner/http/cert',
-	#	'robots_txt' 	: 'auxiliary/scanner/http/robots_txt',
-	#	'title' 		: 'auxiliary/scanner/http/title',
-	#	'http_header' 	: 'auxiliary/scanner/http/http_header',
-	#	'http_put' 		: 'auxiliary/scanner/http/http_put'
-	#}
-
+	import ast
 	import configparser
 	config = configparser.ConfigParser()
-	msfCFG = os.path.abspath(os.path.dirname(__file__)) + "../utils/msf.ini"
+	msfCFG = os.path.abspath(os.path.dirname(__file__)) + "/../utils/msf.ini"
 	whine( "Loading Safe Checks from: " + msfCFG, "debug")
 	config.read(msfCFG)
 	MSF = ast.literal_eval(config.get("MSF-SAFE", "msfLIST"))
