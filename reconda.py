@@ -41,7 +41,7 @@ def MBaku(taskDB):
         if taskDB:
             # need to do some magic here to pass the right data
             s = str(taskDB).strip('()')
-            helper.whine(s,"INFO")
+            helper.whine("dbQueue: " + s,"INFO")
             pattern = "\'(.*)\', (\[.*\])"
             match = re.match(pattern,s)
             if not match:

@@ -70,9 +70,10 @@ def msfHTTPAuxilary(host,port,output):
 
 	import configparser
 	config = configparser.ConfigParser()
-	msfConfig = os.path.abspath(os.path.dirname(__file__)) + "/utils/msf.ini"
-	config.read(msfConfig)
-	MSF = ast.literal_eval(config.get("METASPLOIT_SAFE_CHECKS", "msfLIST"))
+	msfCFG = os.path.abspath(os.path.dirname(__file__)) + "/utils/msf.ini"
+	whine( "Loading Safe Checks from: " + msfCFG, "debug")
+	config.read(msfCFG)
+	MSF = ast.literal_eval(config.get("MSF-SAFE", "msfLIST"))
 	
 	r = re.compile(".*http")
 	msfLIST = list(filter(r.match, MSF))  
