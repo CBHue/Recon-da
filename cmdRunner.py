@@ -153,6 +153,7 @@ def showResult (selection):
 			helper.printR("This entry does not exist: " + selection)
 			return
 	
+	helper.whine("Search cmd: "+ '\033[95m' + cmd + '\033[0m', "debug")
 	results = muxER(cmd)
 	if (len(results)) < 1:
 		return
