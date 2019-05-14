@@ -3,9 +3,9 @@
 import os
 import re
 import time
+import configparser
 import multiprocessing
 from cmd import Cmd
-import configparser
 from argparse import ArgumentParser
 
 # Import local modules
@@ -15,6 +15,7 @@ import dbWork
 import dbQueue
 import utils.helper as helper
 from utils.osWork import realTimeMuxER
+from utils.osWork import muxER
 from dbWork import db_runner
 
 #
@@ -71,7 +72,7 @@ class MyPrompt(Cmd):
         print("")
         print ("Global Session    : "+ '\033[95m'+ dbQueue.master + '\033[0m')
         print ("Output Dir        : " + "\033[95m" + dbQueue.dumpDir + '\033[0m')
-        print ("Debug             : " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
+        print ("Verbosity         : " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
         r = db_runner(conn, "SELECT host, status FROM Hosts WHERE status like '%Stage%'")
         print ("Running Processes : " + '\033[92m' + str(len(r)) + '\033[0m')
         r = db_runner(conn, "SELECT host, status FROM Hosts WHERE status like '%Waiting%'")
@@ -243,9 +244,13 @@ class MyPrompt(Cmd):
 
         try:
             cmd = "find " + dbQueue.dumpDir + " \\( -name \"*.xml\" \\)"
-            xmlFinder = realTimeMuxER(cmd)
+            xmlFinder = muxER(cmd)
+            #if xmlFinder is None:
+            #    print ("No XML files in: " + dbQueue.dumpDir)
             xmlList = xmlFinder.split('\n')
+            xmlList = [i for i in xmlList if i] 
             s = set(xmlList)
+
             print ("XMLs to parse: " + str(len(s)))
             if len(s) > 1:
                 main_nMapMerger(s)
@@ -275,11 +280,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.verbosity:
-        print(args.verbosity)
         dbQueue.debug.value = args.verbosity
 
     # Setup session DB
     conn = dbWork.db_init()  
+    dbQueue.conn = conn
     dbWork.db_setup(conn)
 
     # Make the Pool of workers [Default is 2 * cpu count]
@@ -295,9 +300,9 @@ if __name__ == '__main__':
     multiprocessing.Process(target=MBaku, args=(dbQueue.workDB,)).start()
     
     print ("Global Session : " + '\033[95m'+ dbQueue.master + '\033[0m')
-    print ("workers        : " + '\033[92m'+ str(vibranium) + '\033[0m')
     print ("Output Dir     : " + '\033[95m'+ dbQueue.dumpDir + '\033[0m')
-    print ("Debug          : " + '\033[95m'+ str(dbQueue.debug.value) + '\033[0m')
+    print ("Workers        : " + '\033[92m'+ str(vibranium) + '\033[0m')
+    print ("Verbosity      : " + '\033[92m'+ str(dbQueue.debug.value) + '\033[0m')
 
     prompt = MyPrompt()
     h = prompt.precmd('help')

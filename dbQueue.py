@@ -35,8 +35,6 @@ serviceDir = dumpDir + "ScriptOut/"
 # Set up the Database
 #############################
 dataDIR = dirPath + "/data/" + master + "/"
-
 DB = "reconda.db"
 DBFILE =  dataDIR + DB
-
-conn = ""
+conn = True

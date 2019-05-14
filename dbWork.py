@@ -16,17 +16,14 @@ def db_closeCursor(c):
 def db_runner(conn, query, args=None):
     try:
         c = conn.cursor()
-        
-        if args:
-            c.execute(query, args)
-        else:
-            c.execute(query)
+        if args: c.execute(query, args)
+        else: c.execute(query)
 
         results = c.fetchall()
         c.close()
         return results
     except Exception as e:
-        print(e)
+        helper.printR("db_runner: " + str(e))
 
 def db_init():
     try: 

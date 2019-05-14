@@ -6,19 +6,10 @@ import time
 import ipaddress
 
 import dbQueue
+import hostWork
 import utils.helper as helper
 from utils.osWork import muxER
 from web.webTests import webTests
-
-def db_runner(c, query, args=None):
-    cur = c.cursor()
-    if args:
-        cur.execute(query, args)
-    else:
-        cur.execute(query)
-    results = cur.fetchall()
-    cur.close()
-    return results
 
 def pickWeapon (cmd, host, outFile):
 	tools = {}
@@ -108,7 +99,7 @@ def portLandia (file):
 				if http:
 					url = http.group(1).lower() + "://" + H + ":" + mo.group(1)
 					httpList.add(url)
-					helper.whine("Adding URL: " + url, "debug")
+					helper.whine("portLandia: Adding URL: " + url, "debug")
 
 	return allPort,httpList
 
@@ -154,7 +145,6 @@ def showResult (selection):
 			helper.printR("This entry does not exist: " + selection)
 			return
 	
-	helper.whine("Search cmd: "+ '\033[95m' + cmd + '\033[0m', "debug")
 	results = muxER(cmd)
 	if (len(results)) < 1:
 		return
@@ -256,6 +246,11 @@ def sweepER (network, workerName):
 	# Stage 5 - unicornscan: UDP
 	#
 	udpScan(network, out)
+
+	#
+	# Stage 6 - MSF 
+	#
+	hostWork.msfSafeChecks(network,out)
 
 	#
 	# Clean-up ... we are done
