@@ -128,10 +128,11 @@ def fin (network, out, s0, workerName):
 	
 def showResult (selection):
 	cmd = "date"
-	helper.whine("Search key: "+ '\033[95m' + selection + '\033[0m', "debug")
 	if selection is 'ALL':
+		helper.whine("Search key: "+ '\033[95m' + selection + '\033[0m', "debug")
 		cmd = "find " + dbQueue.dumpDir + " \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\)"
 	elif "name" in selection:
+		helper.whine("Search key: "+ '\033[95m' + selection + '\033[0m', "debug")
 		cmd = "find " + dbQueue.dumpDir + " " + selection
 	else:
 		r = selection

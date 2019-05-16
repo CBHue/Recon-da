@@ -19,19 +19,28 @@ def webTests (network, urls, out, workerName):
 		if match:
 
 			whine( "Running Metasploit Modules: " + network + ":" + match.group(1) , "debug")
+			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (Metasplot Auxilary)", network]
+			dbQueue.workDB.put(DBcommit)
+
 			f = out + "_" + match.group(1) + "_" 
 			msfHTTPAuxilary(network,match.group(1),f)
 
 			whine( "Taking Screenshot: " + u , "debug")
+			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (Taking Screenshot)", network]
+			dbQueue.workDB.put(DBcommit)
 			f = out + "_Port_" + match.group(1) + ".png"
 			chromeShot(u,f)
 
 			whine( "Running Nikto on: " + u , "debug")
+			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (Nikto)", network]
+			dbQueue.workDB.put(DBcommit)
 			f = out + "_" + match.group(1) + ".nikto"
 			cmd = "nikto -Cgidirs all -host " + u + " -Format txt -output " + f
 			muxER(cmd)
 
 			whine( "Running dirb on: " + u , "debug")
+			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (dirb)", network]
+			dbQueue.workDB.put(DBcommit)
 			f = out + "_" + match.group(1) + ".dirb"
 			cmd = "dirb " + u + " -o " + f
 			muxER(cmd)
