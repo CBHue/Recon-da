@@ -175,6 +175,7 @@ def sweepER (network, workerName):
 	# create a unique identifier date + master
 	ts = time.strftime("%m%d%Y_%H_%M_%S", time.gmtime())
 	#s0 = network.replace(".","-").replace("/","_") +  "_" + ts
+	hostIP = network.split('/', 1)[0]
 	s0 = network.replace("/","_") +  "_" + ts
 
 	# Add the work to the DB
@@ -197,7 +198,9 @@ def sweepER (network, workerName):
 	#
 	# stage 1 - nMap : check for open ports
 	#
-	out = dbQueue.dumpDir + s0
+	out = dbQueue.dumpDir + hostIP 
+	os.makedirs(out)
+	out = out + "/" + s0
 	cmd = pickWeapon("nmap", network, out)
 	muxER(cmd)
 
