@@ -82,11 +82,13 @@ class MyPrompt(Cmd):
         realTimeMuxER('stty sane')
         pass
 
-    def do_clear(self, args):
-        heading.banner()
+    def do_Clear(self, args):
+        realTimeMuxER('reset')
+        realTimeMuxER('stty sane')
+        utils.heading.banner()
         prompt.onecmd('help')
 
-    def do_status(self, args):
+    def do_Status(self, args):
         """Gets the status of running processes"""
         print ("Output Dir:" + '\033[95m' + dbQueue.dumpDir + '\033[0m')
         
@@ -120,7 +122,7 @@ class MyPrompt(Cmd):
             dbQueue.debug.value = True
             print ("Debug: " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
 
-    def do_exit(self, args):
+    def do_Exit(self, args):
         """Exits from the console"""
         helper.printC("Shutting down queue ...")
         dbQueue.work.close()
@@ -260,7 +262,7 @@ class MyPrompt(Cmd):
             print ("Error with nmapMerger ... " + str(e))
 
 
-    def do_config(self, key):
+    def do_Config(self, key):
         if key:
             print (key)
         else:
@@ -268,10 +270,6 @@ class MyPrompt(Cmd):
             
 if __name__ == '__main__':
     
-    # Root Check
-    if os.geteuid() != 0:
-        exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
-
     utils.heading.banner()
 
     parser = ArgumentParser()
