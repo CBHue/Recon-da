@@ -31,6 +31,7 @@ debug  = multiprocessing.Value(c_wchar_p,"info")
 ##############################
 dumpDir = dirPath + "/dump/" + master + "/"
 serviceDir = dumpDir + "ScriptOut/"
+screenDir = dumpDir + "screenShots/"
 
 # Set up the Database
 #############################

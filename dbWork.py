@@ -29,11 +29,14 @@ def db_init():
     try: 
         os.makedirs(dbQueue.dumpDir)
         os.makedirs(dbQueue.serviceDir)
+        os.makedirs(dbQueue.screenDir)
         os.makedirs(dbQueue.dataDIR)
     except OSError:
         if not os.path.isdir(dbQueue.dumpDir):
             raise
         if not os.path.isdir(dbQueue.serviceDir):
+            raise
+        if not os.path.isdir(dbQueue.screenDir):
             raise
         if not os.path.isdir(dbQueue.dataDIR):
             raise

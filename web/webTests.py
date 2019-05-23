@@ -1,6 +1,7 @@
 
 import os
 import re
+from shutil import copy2
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -60,6 +61,7 @@ def chromeShot (url,f):
 	try:
 		driver.get(url)
 		driver.get_screenshot_as_file(f)
+		copy2(f, dbQueue.screenDir)
 	except Exception as e:
 		whine("screenshot Error:" + str(e), "debug")
 
