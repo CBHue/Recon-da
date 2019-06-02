@@ -35,21 +35,21 @@ def webTests (network, urls, out, workerName):
 			whine( "Running Nikto on: " + u , "debug")
 			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (Nikto)", network]
 			dbQueue.workDB.put(DBcommit)
-			f = out + "_" + match.group(1) + ".nikto"
+			f = out + "_nikto_" + match.group(1) + ".txt"
 			cmd = "nikto -Cgidirs all -host " + u + " -Format txt -output " + f
 			muxER(cmd)
 
 			whine( "Running dirb on: " + u , "debug")
 			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (dirb)", network]
 			dbQueue.workDB.put(DBcommit)
-			f = out + "_" + match.group(1) + ".dirb"
+			f = out + "_dirb_" + match.group(1) + ".txt"
 			cmd = "dirb " + u + " -o " + f
 			muxER(cmd)
 
 			whine( "Running gobuster on: " + u , "debug")
 			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (gobuster)", network]
 			dbQueue.workDB.put(DBcommit)
-			f = "gobuster_" + out + "_" + match.group(1) + ".txt"
+			f = out + "_gobuster_" +"_" + match.group(1) + ".txt"
 			cmd = "gobuster -q -l -k -e -u " + u + "-w /usr/share/dirb/wordlists/big.txt" + " -o " + f
 			muxER(cmd)
 
@@ -88,6 +88,6 @@ def msfHTTPAuxilary(host,port,output):
 	for module in msfLIST:
 		m = module.rsplit('/', 1)[-1]
 		whine( "Running Metasploit Module: " + module, "debug")
-		f = output + "Metasploit_" + m + ".out"
+		f = output + "_Metasploit_" + m + ".out"
 		cmd = "msfconsole -x \"use  " + module + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
 		muxER(cmd)
