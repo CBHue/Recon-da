@@ -46,6 +46,13 @@ def webTests (network, urls, out, workerName):
 			cmd = "dirb " + u + " -o " + f
 			muxER(cmd)
 
+			whine( "Running gobuster on: " + u , "debug")
+			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (gobuster)", network]
+			dbQueue.workDB.put(DBcommit)
+			f = "gobuster_" + out + "_" + match.group(1) + ".txt"
+			cmd = "gobuster -q -l -k -e -u " + u + "-w /usr/share/dirb/wordlists/big.txt" + " -o " + f
+			muxER(cmd)
+
 def chromeShot (url,f):
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")
