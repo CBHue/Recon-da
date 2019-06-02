@@ -6,7 +6,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -w int, --workers int
                         # of processes. Default is 2 * cpu_count
-  -q, --quiet           don&apos;t print status messages to stdout
+  -v, --verbosity       Message Level: [Error|Warn|Info|Status|Debug]. Default is Info
 </pre>
 
 <br>Functions perfomed:
