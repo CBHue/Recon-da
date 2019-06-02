@@ -1,12 +1,11 @@
 ![alt text](https://github.com/CBHue/Recon-da/blob/master/utils/reconda.png)
 
-<pre>usage: reconda.py [-h] [-w int] [-q]
+<pre>usage: reconda.py [-h] [-w int] [-v (Error|Warn|Info|Status|Debug)]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -w int, --workers int
-                        # of processes. Default is 2 * cpu_count
-  -v, --verbosity       Message Level: [Error|Warn|Info|Status|Debug]. Default is Info
+  -h, --help            	show this help message and exit
+  -w int, --workers int 	# of processes. Default is 2 * cpu_count
+  -v, --verbosity       	Message Level: [Error|Warn|Info|Status|Debug]. Default is Info
 </pre>
 
 <br>Functions perfomed:
