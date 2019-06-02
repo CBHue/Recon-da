@@ -197,7 +197,6 @@ def sweepER (network, workerName):
 
 	#
 	# stage 1 - nMap : check for open ports
-	#
 	out = dbQueue.dumpDir + hostIP 
 	os.makedirs(out)
 	out = out + "/" + s0
@@ -206,7 +205,6 @@ def sweepER (network, workerName):
 
 	#
 	# Stage 2 - nMap : get open ports from the gnmap file
-	#
 	DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage2 - Creating list of open ports", network]
 	dbQueue.workDB.put(DBcommit)
 	f = out + ".gnmap"
@@ -224,7 +222,6 @@ def sweepER (network, workerName):
 
 	#
 	# Stage 3 - nMap : get service description
-	# 
 	DBcommit = 'UPDATE Hosts SET status=?, ports=? WHERE host=?', ["Stage3 - Running nMap service description", iPORTstr, network]
 	dbQueue.workDB.put(DBcommit)
 	f = dbQueue.serviceDir + s0 + "_ServiceID"
@@ -244,20 +241,16 @@ def sweepER (network, workerName):
 
 	#
 	# Stage 4 - Web Tests: ScreenShot, Nikto , dirbuster
-	#
 	webTests(network, finalUrlList, out, workerName)
 
 	#
 	# Stage 5 - unicornscan: UDP
-	#
 	udpScan(network, out)
 
 	#
 	# Stage 6 - MSF 
-	#
 	hostWork.msfSafeChecks(network,out)
 
 	#
 	# Clean-up ... we are done
-	#
 	fin(network, out, s0, workerName)
