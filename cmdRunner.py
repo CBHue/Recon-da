@@ -235,6 +235,7 @@ def sweepER (network, workerName):
 	# check for updates to the url list
 	PORTs,URLs = portLandia(f)
 	finalPortList = list(set().union(initPORTs, PORTs))
+	finalPortList = sorted(finalPortList, key=int)
 	finalPORTstr = "|".join(finalPortList)
 	finalUrlList = list(set().union(initURLs, URLs))
 

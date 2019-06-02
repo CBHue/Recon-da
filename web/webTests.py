@@ -55,17 +55,16 @@ def chromeShot (url,f):
 	chrome_options.add_argument('--ignore-certificate-errors')
 
 	chrome_driver = "/usr/bin/chromedriver"
-	driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
-	driver.set_page_load_timeout(3)
 
 	try:
+		driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=chrome_driver)
+		driver.set_page_load_timeout(3)
 		driver.get(url)
 		driver.get_screenshot_as_file(f)
 		copy2(f, dbQueue.screenDir)
+		driver.quit()
 	except Exception as e:
 		whine("screenshot Error:" + str(e), "debug")
-
-	driver.quit()
 
 def msfHTTPAuxilary(host,port,output):
 	import ast

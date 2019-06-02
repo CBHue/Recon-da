@@ -3,6 +3,7 @@
 import os
 import re
 import time
+import glob
 import configparser
 import multiprocessing
 from cmd import Cmd
@@ -55,17 +56,12 @@ def MBaku(taskDB):
 
     helper.printR("[MBaku] Got the poison pill ... DEAD.")
 
-'''
-def db_runner(query, args=None):
-    cur = dbWork.db_getCursor()
-    if args:
-        cur.execute(query, args)
+def _append_slash_if_dir(p):
+    if p and os.path.isdir(p) and p[-1] != os.sep:
+        return p + os.sep
     else:
-        cur.execute(query)
-    results = cur.fetchall()
-    cur.close()
-    return results
-'''
+        return p
+
 class MyPrompt(Cmd):
 
     def emptyline(self):
@@ -82,7 +78,7 @@ class MyPrompt(Cmd):
         realTimeMuxER('stty sane')
         pass
 
-    def do_Clear(self, args):
+    def do_clear(self, args):
         realTimeMuxER('reset')
         realTimeMuxER('stty sane')
         utils.heading.banner()
@@ -122,7 +118,7 @@ class MyPrompt(Cmd):
             dbQueue.debug.value = True
             print ("Debug: " + '\033[95m' + str(dbQueue.debug.value) + '\033[0m')
 
-    def do_Exit(self, args):
+    def do_exit(self, args):
         """Exits from the console"""
         helper.printC("Shutting down queue ...")
         dbQueue.work.close()
@@ -261,13 +257,27 @@ class MyPrompt(Cmd):
         except Exception as e:
             print ("Error with nmapMerger ... " + str(e))
 
-
     def do_Config(self, key):
         if key:
             print (key)
         else:
             print ("CONFIG")
-            
+
+    def complete_LoadHostFile(self, text, line, begidx, endidx):
+        before_arg = line.rfind(" ", 0, begidx)
+        if before_arg == -1:
+            return # arg not found
+
+        fixed = line[before_arg+1:begidx]  # fixed portion of the arg
+        arg = line[before_arg+1:endidx]
+        pattern = arg + '*'
+
+        completions = []
+        for path in glob.glob(pattern):
+            path = _append_slash_if_dir(path)
+            completions.append(path.replace(fixed, "", 1))
+        return completions
+
 if __name__ == '__main__':
     
     utils.heading.banner()
