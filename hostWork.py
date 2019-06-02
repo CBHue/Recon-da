@@ -43,7 +43,7 @@ def msfSafeChecks(network,output):
 			# At this point we already did HTTP so lets skip them. That might change tho
 			if "http" in module: continue
 			whine( "Running Metasploit Module: " + module, "debug")
-			f = output + "Metasploit_" + m + ".out"
+			f = output + "_Metasploit_" + m + ".txt"
 			cmd = "msfconsole -x \"use  " + module + ";set rhosts " + host + ";set rport " + port + "; run; exit\" > " + f
 			muxER(cmd)
 
