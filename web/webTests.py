@@ -50,7 +50,7 @@ def webTests (network, urls, out, workerName):
 			DBcommit = 'UPDATE Hosts SET status=? WHERE host=?', ["Stage4 - Running Web Tests (gobuster)", network]
 			dbQueue.workDB.put(DBcommit)
 			f = out + "_gobuster_" +"_" + match.group(1) + ".txt"
-			cmd = "gobuster -q -l -k -e -u " + u + "-w /usr/share/dirb/wordlists/big.txt" + " -o " + f
+			cmd = "gobuster dir -q -l -k -e -u" + u + " --wordlist /usr/share/wordlists/dirb/big.txt -o " + f
 			muxER(cmd)
 
 def chromeShot (url,f):
