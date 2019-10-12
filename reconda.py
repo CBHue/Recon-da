@@ -86,7 +86,7 @@ class MyPrompt(Cmd):
 
     def do_Status(self, args):
         """Gets the status of running processes"""
-        print ("Output Dir:" + '\033[95m' + dbQueue.dumpDir + '\033[0m')
+        print ("Output Dir: " + '\033[95m' + dbQueue.dumpDir + '\033[0m')
         
         print ("")
         print ("Finished processes:")
