@@ -143,7 +143,7 @@ def showResult (selection):
 			f = f.split("\'")[1]
 			cmd = "find " + dbQueue.dumpDir + "* \\( -name \"*.out\" -o -name \"*.udp\" -o -name \"*.dirb\" -o -name \"*.nikto\" \\) | grep " + f 
 		else:
-			helper.printR("This entry does not exist: " + selection)
+			helper.printR("This entry does not exist: " + str(selection))
 			return
 	
 	results = muxER(cmd)
