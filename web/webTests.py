@@ -51,7 +51,7 @@ def webTests (network, urls, out, workerName):
 			dbQueue.workDB.put(DBcommit)
 			f = out + "_gobuster_" +"_" + match.group(1) + ".txt"
 			wList = os.path.abspath(os.path.dirname(__file__)) + "/../web/big.txt"
-			cmd = "gobuster dir -q -l -k -e -u " + u + " --wordlist " + wList " -o " + f
+			cmd = "gobuster dir -q -l -k -e -u " + u + " --wordlist " + wList + " -o " + f
 			muxER(cmd)
 
 def chromeShot (url,f):
